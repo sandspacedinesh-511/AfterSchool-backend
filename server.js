@@ -41,14 +41,14 @@ let client;
 
 async function connectDB() {
   try {
-    // MongoDB connection options with SSL/TLS configuration
+    // Simplified options - MongoDB driver handles TLS automatically for mongodb+srv://
+    // Removing explicit TLS options to avoid SSL/TLS conflicts
     const options = {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      serverSelectionTimeoutMS: 10000, // Increase timeout to 10 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      tls: true, // Enable TLS/SSL
-      tlsAllowInvalidCertificates: false, // Don't allow invalid certificates
       retryWrites: true,
       w: 'majority'
+      // Note: TLS is automatically enabled for mongodb+srv:// connections
     };
 
     console.log('Attempting to connect to MongoDB Atlas...');
@@ -68,7 +68,8 @@ async function connectDB() {
     console.error('2. Verify your connection string in .env file');
     console.error('3. Make sure password special characters are URL-encoded (@ = %40)');
     console.error('4. Check your network/firewall settings');
-    console.error('5. Verify MongoDB Atlas cluster is running\n');
+    console.error('5. Verify MongoDB Atlas cluster is running');
+    console.error('6. Try updating Node.js to version 18 or higher\n');
     process.exit(1);
   }
 }
