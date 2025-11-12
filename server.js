@@ -5,11 +5,15 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://your-connection-string';
+const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://your-connection-string';
 
 // Middleware
-app.use(cors());
+// CORS - Allow all origins for development, or specify frontend URL for production
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*', // Allow all in development, specify in production
+  credentials: true
+}));
 app.use(express.json());
 
 // Logger Middleware - logs all server requests to console
