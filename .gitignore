@@ -1,0 +1,13 @@
+node_modules/
+.env
+*.log
+.DS_Store
+*.stackdump
+*.stack
+.env.local
+.env.*.local
+
+
+
+
+
