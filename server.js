@@ -41,21 +41,35 @@ let client;
 
 async function connectDB() {
   try {
-    // Simplified options - MongoDB driver handles TLS automatically for mongodb+srv://
-    // Removing explicit TLS options to avoid SSL/TLS conflicts
+    // Validate connection string
+    if (!MONGODB_URI || MONGODB_URI.includes('your-connection-string')) {
+      throw new Error('MongoDB connection string is not set. Please set MONGO_URI or MONGODB_URI environment variable.');
+    }
+
+    // Connection options optimized for Render.com and MongoDB Atlas
+    // For mongodb+srv://, TLS is automatically handled by the driver
     const options = {
-      serverSelectionTimeoutMS: 10000, // Increase timeout to 10 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      serverSelectionTimeoutMS: 30000, // 30 seconds for Render deployment
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
       retryWrites: true,
-      w: 'majority'
-      // Note: TLS is automatically enabled for mongodb+srv:// connections
+      w: 'majority',
+      // Additional options for better compatibility
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000
     };
 
     console.log('Attempting to connect to MongoDB Atlas...');
     console.log('Connection string format:', MONGODB_URI ? 'Set' : 'Missing');
     
+    // Create client and connect
     client = new MongoClient(MONGODB_URI, options);
+    
+    // Test connection with a ping
     await client.connect();
+    await client.db('admin').command({ ping: 1 });
+    
     db = client.db('afterSchoolClasses');
     console.log('✅ Connected to MongoDB Atlas successfully!');
     
@@ -64,12 +78,19 @@ async function connectDB() {
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     console.error('\n🔍 Troubleshooting steps:');
-    console.error('1. Check if your IP address is whitelisted in MongoDB Atlas');
-    console.error('2. Verify your connection string in .env file');
-    console.error('3. Make sure password special characters are URL-encoded (@ = %40)');
-    console.error('4. Check your network/firewall settings');
-    console.error('5. Verify MongoDB Atlas cluster is running');
-    console.error('6. Try updating Node.js to version 18 or higher\n');
+    console.error('1. ⚠️  IMPORTANT: Check MongoDB Atlas Network Access');
+    console.error('   - Go to MongoDB Atlas → Network Access');
+    console.error('   - Click "Add IP Address"');
+    console.error('   - Add "0.0.0.0/0" to allow all IPs (for testing)');
+    console.error('   - OR add Render.com IP ranges (check Render docs)');
+    console.error('2. Verify your connection string in Render environment variables');
+    console.error('   - Key: MONGO_URI or MONGODB_URI');
+    console.error('   - Format: mongodb+srv://username:password@cluster.mongodb.net/dbname?retryWrites=true&w=majority');
+    console.error('3. Make sure password special characters are URL-encoded');
+    console.error('   - @ becomes %40, # becomes %23, etc.');
+    console.error('4. Verify MongoDB Atlas cluster is running (not paused)');
+    console.error('5. Check Render logs for more details');
+    console.error('6. Ensure Node.js version is 20.x (updated in package.json)\n');
     process.exit(1);
   }
 }
